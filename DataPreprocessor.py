@@ -42,7 +42,7 @@ class Datapreprocessor():
         feature, label = [], []
         for data in dataset:
             feature.append(data[:-1])
-            label.append(data[-1])
+            label.append([data[-1]])
         return feature, label
 
     def label_list(dataset):
@@ -55,5 +55,16 @@ class Datapreprocessor():
     def num_of_feature(dataset):
         return len(dataset[0][:-1])
     
+    def label_preprocess(labelset):
+        modified_label_set = []
+        existing_label = []
+        current_label = 0
+        for label in labelset:
+            if label not in existing_label:
+                print("add")
+                existing_label.append([current_label])
+                modified_label_set.append([current_label])
+                current_label+=1
+        return modified_label_set
 
 

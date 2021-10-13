@@ -12,8 +12,10 @@ import random
 
 
 def openfile():
-    global dataset_url
+    global dataset_url, filename
     dataset_url = filedialog.askopenfilename(title="Select file")
+    filename = filename.split("/")[-1]
+    filename = filename.split(".")[0]
     return dataset_url
 
 def prepare_data():
@@ -39,32 +41,41 @@ canvas = tk.Canvas(window, height=400, width=400)
 # image = canvas.create_image(0,0, anchor='nw', image=image_file)
 canvas.pack(side='top')
 
-# user information
-tk.Label(window, text='neurons per layer: ').place(x=50, y= 150)
-tk.Label(window, text='number of layers: ').place(x=50, y= 190)
-
-
+# model parameter
 neurons_per_layer = tk.IntVar()
 entry_neurons_per_layer = tk.Entry(window, textvariable=neurons_per_layer)
 entry_neurons_per_layer.place(x=160, y=150)
+tk.Label(window, text='neurons per layer: ').place(x=50, y= 150)
 num_layer = tk.IntVar()
 entry_num_layer = tk.Entry(window, textvariable=num_layer)
 entry_num_layer.place(x=160, y=190)
+tk.Label(window, text='number of layers: ').place(x=50, y= 190)
 learning_rate = tk.DoubleVar()
 entry_learning_rate = tk.Entry(window, textvariable=learning_rate)
 entry_learning_rate.place(x=160, y=230)
+tk.Label(window, text='learning rate: ').place(x=50, y= 230)
 iteration = tk.IntVar()
 entry_iteration = tk.Entry(window, textvariable=iteration)
 entry_iteration.place(x=160, y=270)
+tk.Label(window, text='iteration: ').place(x=50, y= 270)
+
 
 def start():
     train_x, train_y, test_x, test_y , label_count, feature_count= prepare_data()
-    model = MLPerceptron(num_layer.get(),neurons_per_layer.get(),feature_count,1,learning_rate.get())
-    model.train(train_x, train_y, iteration.get())
-    model.predict(test_x)
+    modified_train_y = Datapreprocessor.label_preprocess(train_y)
+    modified_test_y = Datapreprocessor.label_preprocess(test_y)
+    model = MLPerceptron(num_layer.get(),neurons_per_layer.get(),feature_count,2,learning_rate.get())
+    losses = model.train(train_x, modified_train_y, iteration.get())
+    print(model.predict([0,0]))
 
+    plt.plot(losses)
+    plt.xlabel('Iteration')
+    plt.ylabel('losses')
+    plt.show()
 
 dataset_url = ""
+filename = ""
+tk.Label(window, textvariable=filename).place(x=250, y= 110)
 select_data_btn = tk.Button(window, text='select dataset', command=openfile)
 select_data_btn.place(x=160, y=110)
 btn_login = tk.Button(window, text='start', command=start)
@@ -82,9 +93,4 @@ window.mainloop()
 # print(test_y)
 # print(model.layers[1].weights)
 
-# x = np.array(range(2))
-# y = -(model.layers[1].weights[0]*x + model.layers[1].bias)/model.layers[1].weights[1]
-# plt.plot(x, y ,linewidth = 1, color = 'black') #畫圖 ms：折點大小
 
-# plt.scatter(train_x[0], train_x[1])
-# plt.show()
