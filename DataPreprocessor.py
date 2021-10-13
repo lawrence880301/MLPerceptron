@@ -45,4 +45,15 @@ class Datapreprocessor():
             label.append(data[-1])
         return feature, label
 
+    def label_list(dataset):
+        label_list = []
+        for data in dataset:
+            if data[-1] not in label_list:
+                label_list.append(data[-1])
+        return label_list
+
+    def num_of_feature(dataset):
+        return len(dataset[0][:-1])
+    
+
 

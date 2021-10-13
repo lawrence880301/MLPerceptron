@@ -35,7 +35,9 @@ class MLPerceptron():
         for i in range(n_iter):
             for xi, yi in zip(x, y):
                 self.backward(xi, yi)
-            loss = np.sum((y-self.forward(x))**2)
+            print(y)
+            print(self.forward(x))
+            loss = np.sum((y-max(self.forward(x)))**2)
             losses.append(loss)
         return losses
     
