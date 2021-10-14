@@ -37,17 +37,11 @@ class MLPerceptron():
                 self.backward(xi, yi)
             loss = np.sum((y-self.forward(x))**2)
             losses.append(loss)
-        print("----x----")
-        print(x)
-        print("---activate x")
-        print(self.forward(x))
-        print("---y---")
-        print(y)
         return losses
     
     def predict(self, x):
         outputs = self.forward(x)
-        print("---output---")
+        print("---predictoutput---")
         print(outputs)
         return np.argmax(outputs)
 
