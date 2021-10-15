@@ -28,6 +28,10 @@ def prepare_data():
     test_x, test_y = Datapreprocessor.feature_label_split(test_data)
     return train_x, train_y, test_x, test_y, label_count, feature_count
 
+# def plot(model):
+#     for layer in model.layers
+
+
 
 
 #gui
@@ -64,18 +68,11 @@ def start():
     train_x, train_y, test_x, test_y , label_count, feature_count= prepare_data()
     modified_train_y = Datapreprocessor.label_preprocess(train_y)
     modified_test_y = Datapreprocessor.label_preprocess(test_y)
-    print()
     model = MLPerceptron(num_layer.get(),neurons_per_layer.get(),feature_count,1,learning_rate.get())
     losses = model.train(train_x, modified_train_y, iteration.get())
     print(model.predict(test_x))
-    print("testy")
-    print(test_y)
-    print(model.predict(test_y))
+    # print(model.accuracy_score(model.predict(test_x),modified_test_y ))
 
-    plt.plot(losses)
-    plt.xlabel('Iteration')
-    plt.ylabel('losses')
-    plt.show()
 
 dataset_url = ""
 filename = ""

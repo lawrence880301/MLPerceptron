@@ -20,10 +20,15 @@ class MLPerceptron():
             if i == len(self.layers) - 1:
                 self.layers[i].error = y - out
                 self.layers[i].delta = self.layers[i].error * self.layers[i].activation_der(out)
+
             # hidden layers
             else :
                 self.layers[i].delta = np.dot(self.layers[i].activation_der(self.layers[i].output),
                                     np.dot(self.layers[i+1].weights, self.layers[i+1].delta))
+                # print("--activation--")
+                # print(self.layers[i].activation_der(self.layers[i].output))
+                # print("--sigma--")
+                # print(np.dot(self.layers[i+1].weights, self.layers[i+1].delta))
         #modify weight for each layer
         for i, layer in enumerate(self.layers):
             layer = self.layers[i]
@@ -41,9 +46,12 @@ class MLPerceptron():
     
     def predict(self, x):
         outputs = self.forward(x)
-        print("---predictoutput---")
-        print(outputs)
         return np.argmax(outputs)
+
+    def accuracy_score(self, x, true_label):
+        predicted_label = self.predict(x)
+        same = np.sum(predicted_label == true_label)
+        return same/len(true_label)
 
 
 class Layer:
@@ -58,6 +66,7 @@ class Layer:
         
     def cal_weighted_sum(self, x):
         self.weighted_sum = np.dot(x, self.weights) + self.bias
+
         return self.weighted_sum
     
     def activation(self, x):

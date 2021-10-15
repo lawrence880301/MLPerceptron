@@ -57,14 +57,15 @@ class Datapreprocessor():
     
     def label_preprocess(labelset):
         modified_label_set = []
-        existing_label = []
-        current_modified_label = 0
+        existing_label = {}
+        new_max_label = 0
         for label in labelset:
-            if label not in existing_label:
-                existing_label.append(label)
-                modified_label_set.append(current_modified_label)
-                current_modified_label+=1
-        print(modified_label_set)
+            if str(label) not in existing_label:
+                existing_label[str(label)] = new_max_label
+                modified_label_set.append([existing_label[str(label)]])
+                new_max_label+=1
+            else:
+                modified_label_set.append([existing_label[str(label)]])
         return modified_label_set
 
 
