@@ -37,23 +37,6 @@ class Datapreprocessor():
         random.shuffle(data)
         train_data, test_data = data[:sample_position], data[sample_position:]
         return train_data, test_data
-
-    def feature_label_split(dataset):
-        feature, label = [], []
-        for data in dataset:
-            feature.append(data[:-1])
-            label.append([data[-1]])
-        return feature, label
-
-    def label_list(dataset):
-        label_list = []
-        for data in dataset:
-            if data[-1] not in label_list:
-                label_list.append(data[-1])
-        return label_list
-
-    def num_of_feature(dataset):
-        return len(dataset[0][:-1])
     
     def label_preprocess(labelset):
         modified_label_set = []
