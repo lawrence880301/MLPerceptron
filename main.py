@@ -1,10 +1,13 @@
+from math import e
 from DataPreprocessor import Datapreprocessor
-from MLPerceptron import *
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from SingleLayerPerceptron import SingleLayerPerceptron
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
+NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
+import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 import random
@@ -13,30 +16,21 @@ import random
 
 def openfile():
     global dataset_url, filename
+    filename.set("")
     dataset_url = filedialog.askopenfilename(title="Select file")
-    filename = filename.split("/")[-1]
-    filename = filename.split(".")[0]
+    filename.set(dataset_url.split("/")[-1].split(".")[0])
     return dataset_url
 
 def prepare_data():
     dataset = Datapreprocessor.readfile(dataset_url)
     dataset = Datapreprocessor.text_to_numlist(dataset)
-    label_count = len(Datapreprocessor.label_list(dataset))
-    feature_count = Datapreprocessor.num_of_feature(dataset)
-    train_data, test_data = Datapreprocessor.train_test_split(dataset, 2/3)
-    train_x, train_y = Datapreprocessor.feature_label_split(train_data)
-    test_x, test_y = Datapreprocessor.feature_label_split(test_data)
-    return train_x, train_y, test_x, test_y, label_count, feature_count
-
-# def plot(model):
-#     for layer in model.layers
-
+    return dataset
 
 
 
 #gui
 window = tk.Tk()
-window.title('multilayer-perceptron')
+window.title('perceptron')
 window.geometry('600x600')
 
 # welcome image
@@ -46,14 +40,6 @@ canvas = tk.Canvas(window, height=400, width=400)
 canvas.pack(side='top')
 
 # model parameter
-neurons_per_layer = tk.IntVar()
-entry_neurons_per_layer = tk.Entry(window, textvariable=neurons_per_layer)
-entry_neurons_per_layer.place(x=160, y=150)
-tk.Label(window, text='neurons per layer: ').place(x=50, y= 150)
-num_layer = tk.IntVar()
-entry_num_layer = tk.Entry(window, textvariable=num_layer)
-entry_num_layer.place(x=160, y=190)
-tk.Label(window, text='number of layers: ').place(x=50, y= 190)
 learning_rate = tk.DoubleVar()
 entry_learning_rate = tk.Entry(window, textvariable=learning_rate)
 entry_learning_rate.place(x=160, y=230)
@@ -65,22 +51,97 @@ tk.Label(window, text='iteration: ').place(x=50, y= 270)
 
 
 def start():
-    train_x, train_y, test_x, test_y , label_count, feature_count= prepare_data()
-    modified_train_y = Datapreprocessor.label_preprocess(train_y)
-    modified_test_y = Datapreprocessor.label_preprocess(test_y)
-    model = MLPerceptron(num_layer.get(),neurons_per_layer.get(),feature_count,1,learning_rate.get())
-    losses = model.train(train_x, modified_train_y, iteration.get())
-    print(model.predict(test_x))
-    # print(model.accuracy_score(model.predict(test_x),modified_test_y ))
+    trained_weights.set("")
+    trained_score.set("")
+    dataset= prepare_data()
+    model = SingleLayerPerceptron(learning_rate.get(), iteration.get())
+    scores = model.evaluate_algorithm(dataset, 'perceptron')
+    trained_weights.set(model.weights)
+    trained_score.set(scores)
+    plot(model.weights, model.train_set, model.test_set)
 
 
+
+#select data
 dataset_url = ""
-filename = ""
-tk.Label(window, textvariable=filename).place(x=250, y= 110)
-select_data_btn = tk.Button(window, text='select dataset', command=openfile)
-select_data_btn.place(x=160, y=110)
+filename = tk.StringVar()
+selected_file = tk.Label(window, textvariable=filename).place(x=280, y= 110)
+select_data_btn = tk.Button(window, text='select dataset', command=openfile).place(x=160, y=110)
+
+#start
 btn_login = tk.Button(window, text='start', command=start)
 btn_login.place(x=160, y=310)
+
+#weights
+tk.Label(window, text='trained_weights: ').place(x=50, y= 330)
+trained_weights = tk.StringVar()
+lb_trained_weights = tk.Label(window, textvariable=trained_weights).place(x=160, y=330)
+
+#score
+tk.Label(window, text='score: ').place(x=50, y= 370)
+trained_score = tk.StringVar()
+lb_trained_score = tk.Label(window, textvariable=trained_score).place(x=160, y=370)
+
+#plot
+# the figure that will contain the plot
+fig = Figure(figsize = (5, 5),
+        dpi = 100)
+
+# adding the subplot
+plot1 = fig.add_subplot(111)
+# creating the Tkinter canvas
+# containing the Matplotlib figure
+canvas = FigureCanvasTkAgg(fig,
+                            master = window)  
+def plot(weights, train_set, test_set):
+    plot1.clear()
+    min_y = min([row[1] for row in train_set])
+    max_y = max([row[1] for row in train_set])
+    
+    # 2d
+    if len(train_set[0])-1 == 2:
+        y = np.linspace(min_y,max_y,50)
+        # if weights[1]!=0:
+        x = (-1*(weights[2]+ 1*e-20)*y + (weights[0]+1*e-20)) / (weights[1]+1*e-20)
+        # else: 
+        #     x = (weights[0]+1*e-20) / (weights[2]+ 1*e-20)
+    
+        # plotting the graph
+        plot1.plot(x,y)
+        train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Category": [row[2] for row in train_set]})
+        test_data = pd.DataFrame({"X Value": [row[0] for row in test_set], "Y Value": [row[1] for row in test_set], "Category": [row[2] for row in test_set]})
+        train_groups = train_data.groupby("Category")
+        test_groups = test_data.groupby("Category")
+        
+        group_idx_list = []
+        for group_idx, _ in train_groups:
+            if group_idx not in group_idx_list:
+                group_idx_list.append(group_idx)
+        color_dict = {}
+        color_dict[group_idx_list[0]] = "r"
+        color_dict[group_idx_list[1]] = "b"
+
+
+        for name, group in train_groups:
+            plot1.plot(group["X Value"], group["Y Value"], marker="o", c = color_dict[name],linestyle="", label=name)
+        for name, group in test_groups:
+            plot1.plot(group["X Value"], group["Y Value"], marker="x", c = color_dict[name],linestyle="", label=name)
+
+    canvas.draw()
+  
+    # placing the canvas on the Tkinter window
+    canvas.get_tk_widget().pack()
+  
+    # creating the Matplotlib toolbar
+    toolbar = NavigationToolbar2Tk(canvas,
+                                   window)
+    toolbar.update()
+  
+    # placing the toolbar on the Tkinter window
+    canvas.get_tk_widget().pack()
+
+
+
 window.mainloop()
 
 
@@ -88,10 +149,6 @@ window.mainloop()
 
 
 
-# model = MLPerceptron(0,2,2,1,0.1)
-# model.train(train_x, train_y, 100)
-# print(model.predict(test_x))
-# print(test_y)
-# print(model.layers[1].weights)
+
 
 

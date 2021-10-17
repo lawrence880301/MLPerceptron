@@ -1,6 +1,6 @@
 import random
-import numpy as np
-from MLPerceptron import *
+
+
 
 class Datapreprocessor():
     def __init__(self) -> None:
@@ -38,17 +38,16 @@ class Datapreprocessor():
         train_data, test_data = data[:sample_position], data[sample_position:]
         return train_data, test_data
     
-    def label_preprocess(labelset):
-        modified_label_set = []
+    def label_preprocess(dataset):
         existing_label = {}
         new_max_label = 0
-        for label in labelset:
-            if str(label) not in existing_label:
-                existing_label[str(label)] = new_max_label
-                modified_label_set.append([existing_label[str(label)]])
+        for row in dataset:
+            if str(row[-1]) not in existing_label:
+                existing_label[str(row[-1])] = new_max_label
+                row[-1] = existing_label[str(row[-1])]
                 new_max_label+=1
             else:
-                modified_label_set.append([existing_label[str(label)]])
-        return modified_label_set
+                row[-1] = existing_label[str(row[-1])]
+        return dataset
 
 
