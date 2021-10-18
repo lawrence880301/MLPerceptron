@@ -94,10 +94,10 @@ fig = Figure(figsize = (5, 5),
 # containing the Matplotlib figure
 canvas = FigureCanvasTkAgg(fig,
                             master = window)  
+
 def plot(weights, train_set, test_set):
-    
-    plt.clf()
-    
+    fig.clear()
+
     # 2d
     if len(train_set[0])-1 == 2:
         plot1 = fig.add_subplot(111)
@@ -107,7 +107,7 @@ def plot(weights, train_set, test_set):
         # if weights[1]!=0:
         y = (-1*(weights[1]+ 1*e-20)*x + (weights[0]+1*e-20)) / (weights[2]+1*e-20)
 
-        # plotting the graph
+        # plot data point
         plot1.plot(x,y)
         train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Category": [row[2] for row in train_set]})
         test_data = pd.DataFrame({"X Value": [row[0] for row in test_set], "Y Value": [row[1] for row in test_set], "Category": [row[2] for row in test_set]})
@@ -146,7 +146,9 @@ def plot(weights, train_set, test_set):
     # placing the toolbar on the Tkinter window
     canvas.get_tk_widget().pack()
 
-
+def clear():
+    for item in canvas.get_tk_widget().find_all():
+       canvas.get_tk_widget().delete(item)
 
 window.mainloop()
 
