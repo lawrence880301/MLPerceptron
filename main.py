@@ -1,11 +1,12 @@
 from math import e
+from math import ceil, floor
 from DataPreprocessor import Datapreprocessor
 from SingleLayerPerceptron import SingleLayerPerceptron
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import axes3d
 import numpy as np
 import pandas as pd
 import tkinter as tk
@@ -88,24 +89,24 @@ fig = Figure(figsize = (5, 5),
         dpi = 100)
 
 # adding the subplot
-plot1 = fig.add_subplot(111)
+
 # creating the Tkinter canvas
 # containing the Matplotlib figure
 canvas = FigureCanvasTkAgg(fig,
                             master = window)  
 def plot(weights, train_set, test_set):
-    plot1.clear()
-    min_y = min([row[1] for row in train_set])
-    max_y = max([row[1] for row in train_set])
+    
+    plt.clf()
     
     # 2d
     if len(train_set[0])-1 == 2:
-        y = np.linspace(min_y,max_y,50)
+        plot1 = fig.add_subplot(111)
+        min_x = floor(min([row[0] for row in train_set]))
+        max_x = ceil(max([row[0] for row in train_set]))
+        x = np.array(range(min_x, max_x+1))
         # if weights[1]!=0:
-        x = (-1*(weights[2]+ 1*e-20)*y + (weights[0]+1*e-20)) / (weights[1]+1*e-20)
-        # else: 
-        #     x = (weights[0]+1*e-20) / (weights[2]+ 1*e-20)
-    
+        y = (-1*(weights[1]+ 1*e-20)*x + (weights[0]+1*e-20)) / (weights[2]+1*e-20)
+
         # plotting the graph
         plot1.plot(x,y)
         train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Category": [row[2] for row in train_set]})
@@ -126,7 +127,12 @@ def plot(weights, train_set, test_set):
             plot1.plot(group["X Value"], group["Y Value"], marker="o", c = color_dict[name],linestyle="", label=name)
         for name, group in test_groups:
             plot1.plot(group["X Value"], group["Y Value"], marker="x", c = color_dict[name],linestyle="", label=name)
-
+    if len(train_set[0])-1 == 3:
+        plot2 = fig.add_subplot(1, 2, 1, projection='3d')
+        z_line = np.linspace(0, 15, 1000)
+        x_line = np.cos(z_line)
+        y_line = np.sin(z_line)
+        plot2.plot3D(x_line, y_line, z_line, 'gray')
     canvas.draw()
   
     # placing the canvas on the Tkinter window

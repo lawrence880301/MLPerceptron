@@ -60,7 +60,6 @@ class SingleLayerPerceptron():
 		predictions = list()
 		modified_train_set = Datapreprocessor.label_preprocess(train)
 		modified_test_set = Datapreprocessor.label_preprocess(test)
-		print(modified_test_set)
 		self.train_weights(modified_train_set)
 		for row in modified_test_set:
 			prediction = self.predict(row)
