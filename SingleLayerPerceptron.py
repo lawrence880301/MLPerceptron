@@ -39,7 +39,7 @@ class SingleLayerPerceptron():
 		return self.hard_limit(activation)
 
 	def hard_limit(self, x):
-		return 1.0 if x >= 0.0 else 0.0
+		return 1.0 if x >= 0.0 else -1.0
 
 
 	def train_weights(self, train):

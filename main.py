@@ -12,7 +12,7 @@ import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
 import random
-
+from operator import itemgetter
 
 
 def openfile():
@@ -106,9 +106,11 @@ def plot(weights, train_set, test_set):
         x = np.array(range(min_x, max_x+1))
         # if weights[1]!=0:
         y = (-1*(weights[1]+ 1*e-20)*x + (weights[0]+1*e-20)) / (weights[2]+1*e-20)
-
+        print(y)
         # plot data point
         plot1.plot(x,y)
+        train_set.sort(key=itemgetter(-1), reverse=False)
+        test_set.sort(key=itemgetter(-1), reverse=False)
         train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Category": [row[2] for row in train_set]})
         test_data = pd.DataFrame({"X Value": [row[0] for row in test_set], "Y Value": [row[1] for row in test_set], "Category": [row[2] for row in test_set]})
         train_groups = train_data.groupby("Category")
@@ -129,10 +131,37 @@ def plot(weights, train_set, test_set):
             plot1.plot(group["X Value"], group["Y Value"], marker="x", c = color_dict[name],linestyle="", label=name)
     if len(train_set[0])-1 == 3:
         plot2 = fig.add_subplot(1, 2, 1, projection='3d')
-        z_line = np.linspace(0, 15, 1000)
-        x_line = np.cos(z_line)
-        y_line = np.sin(z_line)
-        plot2.plot3D(x_line, y_line, z_line, 'gray')
+        min_x = floor(min([row[0] for row in train_set]))
+        max_x = ceil(max([row[0] for row in train_set]))
+        x = np.array(range(min_x, max_x+1))
+        min_y = floor(min([row[1] for row in train_set]))
+        max_y = ceil(max([row[1] for row in train_set]))
+        y = np.array(range(min_y, max_y+1))
+        X, Y = np.meshgrid(x, y)
+        z = (-1*(weights[1]+ 1*e-20)*X + -1*(weights[2]+ 1*e-20)*Y +  (weights[0]+1*e-20)) / (weights[3]+1*e-20)
+        plot2.plot_surface(x, y, z)
+        
+        train_set.sort(key=itemgetter(-1), reverse=False)
+        test_set.sort(key=itemgetter(-1), reverse=False)
+        train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Z Value": [row[2] for row in train_set],"Category": [row[3] for row in train_set]})
+        test_data = pd.DataFrame({"X Value": [row[0] for row in test_set], "Y Value": [row[1] for row in test_set], "Z Value": [row[2] for row in test_set], "Category": [row[3] for row in test_set]})
+        train_groups = train_data.groupby("Category")
+        test_groups = test_data.groupby("Category")
+        
+        group_idx_list = []
+        for group_idx, _ in train_groups:
+            if group_idx not in group_idx_list:
+                group_idx_list.append(group_idx)
+        color_dict = {}
+        color_dict[group_idx_list[0]] = "r"
+        color_dict[group_idx_list[1]] = "b"
+
+
+        for name, group in train_groups:
+            plot2.plot(group["X Value"], group["Y Value"],group["Z Value"], marker="o", c = color_dict[name],linestyle="", label=name)
+        for name, group in test_groups:
+            plot2.plot(group["X Value"], group["Y Value"], group["Z Value"], marker="x", c = color_dict[name],linestyle="", label=name)
+        
     canvas.draw()
   
     # placing the canvas on the Tkinter window
