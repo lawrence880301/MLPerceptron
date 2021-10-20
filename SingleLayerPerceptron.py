@@ -47,12 +47,19 @@ class SingleLayerPerceptron():
 		for epoch in range(self.n_epoch):
 			for row in train:
 				prediction = self.predict(row)
-				error = row[-1] - prediction
-				#update bias
-				self.weights[0] = self.weights[0] + self.l_rate * error
-				#update weights
-				for i in range(len(row)-1):
-					self.weights[i + 1] = self.weights[i + 1] + self.l_rate * error * row[i]
+				if prediction > row[-1]:
+					#update bias
+					self.weights[0] -= self.l_rate
+					#update weights
+					for i in range(len(row)-1):
+						self.weights[i + 1] -= self.weights[i + 1] + self.l_rate * row[i]
+				if prediction < row[-1]:
+					#update bias
+					self.weights[0] += self.l_rate
+					#update weights
+					for i in range(len(row)-1):
+						self.weights[i + 1] += self.weights[i + 1] + self.l_rate * row[i]
+
 		
 
 	# Perceptron Algorithm With Stochastic Gradient Descent

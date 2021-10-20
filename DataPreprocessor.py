@@ -1,7 +1,4 @@
 import random
-
-
-
 class Datapreprocessor():
     def __init__(self) -> None:
         pass
@@ -37,8 +34,25 @@ class Datapreprocessor():
         random.shuffle(data)
         train_data, test_data = data[:sample_position], data[sample_position:]
         return train_data, test_data
+
+    def feature_label_split(dataset):
+        feature = []
+        label = []
+        for row in dataset:
+            feature.append(row[:-1])
+            label.append(row[-1])
+        return feature, label
+
     
     def label_preprocess(dataset):
+        """label origin label to new label, which start from 0
+
+        Args:
+            dataset ([list]): dataset to be processed
+
+        Returns:
+            [list]: processed dataset
+        """
         existing_label = {}
         new_max_label = 0
         for row in dataset:
