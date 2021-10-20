@@ -64,4 +64,14 @@ class Datapreprocessor():
                 row[-1] = existing_label[str(row[-1])]
         return dataset
 
+    def group_dataset_by_label(dataset):
+        label_0 = []
+        label_1 = []
+        for row in dataset:
+            if row[-1] == 0:
+                label_0.append(row)
+            else:
+                label_1.append(row)
+        return label_0, label_1
+
 

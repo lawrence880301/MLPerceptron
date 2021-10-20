@@ -1,19 +1,15 @@
 from math import e
 from math import ceil, floor
 from DataPreprocessor import Datapreprocessor
-from SingleLayerPerceptron import SingleLayerPerceptron
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
 import numpy as np
-import pandas as pd
 import tkinter as tk
 from tkinter import filedialog
-import random
-from operator import itemgetter
-from test import Perceptron
+from Perceptron import Perceptron
 
 ##########code###########
 def openfile():
@@ -35,6 +31,13 @@ def accuracy_metric(actual, predicted):
 			correct += 1
 	return correct / float(len(actual)) * 100.0
 
+def predict_list(model, feature):
+    predictions = []
+    for row in feature:
+        predict = model.predict(row)
+        predictions.append(predict)   
+    return predictions
+
 def start():
     #refresh previous weights and score
     trained_weights.set("")
@@ -49,139 +52,99 @@ def start():
     model.train(np.array(modified_train_x), np.array(modified_train_y))
     #predict and setting current weights and score
     trained_weights.set(model.weights)
-    predict_list = []
-    for row in modified_test_x:
-        predict = model.predict(row)
-        predict_list.append(predict)
-    test_accuaracy = accuracy_metric(modified_test_y ,predict_list)
-    trained_score.set(test_accuaracy)
+    predict_train_list = predict_list(model, modified_train_x)
+    predict_test_list = predict_list(model, modified_test_x)
+    train_accuaracy = accuracy_metric(modified_train_y ,predict_train_list)
+    test_accuaracy = accuracy_metric(modified_test_y ,predict_test_list)
+    trained_score.set(train_accuaracy)
+    test_score.set(test_accuaracy)
     #plot line and data point
-    plot(model.weights, dataset, modified_train_x, modified_train_y, modified_test_x, modified_test_y)
+    plot(model.weights,  modified_train_data, modified_test_data)
 
-def plot(weights, dataset, modified_train_x, modified_train_y, modified_test_x, modified_test_y):
+def plot(weights,  modified_train_data, modified_test_data):
     fig.clear()
-    origin_train_data, origin_test_data = Datapreprocessor.train_test_split(dataset, 2/3)
-    origin_train_x, origin_train_y = Datapreprocessor.feature_label_split(origin_train_data)
-    origin_test_x, origin_test_y = Datapreprocessor.feature_label_split(origin_test_data)
+    train_label_0, train_label_1 = Datapreprocessor.group_dataset_by_label(modified_train_data)
+    test_label_0, test_label_1 = Datapreprocessor.group_dataset_by_label(modified_test_data)
+
+    min_x = floor(min([row[0] for row in modified_train_data]))
+    max_x = ceil(max([row[0] for row in modified_train_data]))
+    x = np.array(range(min_x, max_x+1))
     # 2d
-    print(modified_train_x[0])
-    if len(modified_train_x[0]) == 2:
-        plot1 = fig.add_subplot(111)
-        min_x = floor(min([row[0] for row in modified_train_x]))
-        max_x = ceil(max([row[0] for row in modified_train_x]))
-        origin_min_x = floor(min([row[0] for row in origin_train_data]))
-        origin_max_x = ceil(max([row[0] for row in origin_train_data]))
-        origin_min_y = floor(min([row[1] for row in origin_train_data]))
-        origin_max_y = ceil(max([row[1] for row in origin_train_data])) 
-        x = np.array(range(min_x, max_x+1))
-        origin_x = np.array(range(origin_min_x, origin_max_x))
-        origin_y = np.array(range(origin_min_y, origin_max_y))
-        # if weights[1]!=0:
-        y = (-1*(weights[1]+ 1*e-20)*x + (weights[0]+1*e-20)) / (weights[2]+1*e-20)
-        # plot data point
-        plot1.set_xticks(origin_x)
-        plot1.set_yticks(origin_y)
-        plot1.plot(x,y)
+    if len(modified_train_data[0]) - 1 == 2:
+        plot2d = fig.add_subplot(111)
+        y = (-1*(weights[1])*x - weights[0]) / (weights[2])
+        plot2d.plot(x,y)
+        plot2d.scatter(np.array(train_label_0)[:,0], np.array(train_label_0)[:,1], c="red", marker = 'o')
+        plot2d.scatter(np.array(train_label_1)[:,0], np.array(train_label_1)[:,1], c="blue", marker = 'o')
+        if len(test_label_0)==1:
+            plot2d.scatter(np.array(test_label_0)[0][0], np.array(test_label_0)[0][1], c="red", marker = 'x')
+        elif len(test_label_0)>1:
+            plot2d.scatter(np.array(test_label_0)[:,0], np.array(test_label_0)[:,1], c="red", marker = 'x')
+        if len(test_label_1)==1:
+            plot2d.scatter(np.array(test_label_1)[0][0], np.array(test_label_1)[0][1], c="blue", marker = 'x')
+        elif len(test_label_1)>1:
+            plot2d.scatter(np.array(test_label_1)[:,0], np.array(test_label_1)[:,1], c="blue", marker = 'x')
+    #3d
+    if len(modified_train_data[0])-1 == 3:
+        plot3d = fig.add_subplot(1, 2, 1, projection='3d')
+        min_y = floor(min([row[1] for row in modified_train_data]))
+        max_y = ceil(max([row[1] for row in modified_train_data]))
+        y = np.array(range(min_y, max_y+1))
+        X, Y = np.meshgrid(x, y)
+        z = (-1*(weights[1])*X + -1*(weights[2])*Y -  (weights[0])) / (weights[3])
+        
+        plot3d.scatter(np.array(train_label_0)[:,0], np.array(train_label_0)[:,1], np.array(train_label_0)[:,2], c="red", marker = 'o')
+        plot3d.scatter(np.array(train_label_1)[:,0], np.array(train_label_1)[:,1], np.array(train_label_1)[:,2], c="blue", marker = 'o')
+        if len(test_label_0)==1:
+            plot3d.scatter(np.array(test_label_0)[0][0], np.array(test_label_0)[0][1], np.array(test_label_0)[0][2], c="red", marker = 'x')
+        elif len(test_label_0)>1:
+            plot3d.scatter(np.array(test_label_0)[:,0], np.array(test_label_0)[:,1], np.array(test_label_0)[:,2], c="red", marker = 'x')
+        if len(test_label_1)==1:
+            plot3d.scatter(np.array(test_label_1)[0][0], np.array(test_label_1)[0][1], np.array(test_label_1)[0][2], c="blue", marker = 'x')
+        elif len(test_label_1)>1:
+            plot3d.scatter(np.array(test_label_1)[:,0], np.array(test_label_1)[:,1], np.array(test_label_1)[:,2], c="blue", marker = 'x')
+        plot3d.plot_surface(x, y, z)
     canvas.draw()
-
-    #     train_set = Datapreprocessor.label_preprocess(train_set)
-    #     test_set = Datapreprocessor.label_preprocess(test_set)
-    #     train_set.sort(key=itemgetter(-1), reverse=False)
-    #     test_set.sort(key=itemgetter(-1), reverse=False)
-    #     train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Category": [row[2] for row in train_set]})
-    #     test_data = pd.DataFrame({"X Value": [row[0] for row in test_set], "Y Value": [row[1] for row in test_set], "Category": [row[2] for row in test_set]})
-    #     train_groups = train_data.groupby("Category")
-    #     test_groups = test_data.groupby("Category")
-        
-    #     group_idx_list = []
-    #     for group_idx, _ in train_groups:
-    #         if group_idx not in group_idx_list:
-    #             group_idx_list.append(group_idx)
-    #     color_dict = {}
-    #     color_dict[group_idx_list[0]] = "r"
-    #     color_dict[group_idx_list[1]] = "b"
-
-
-    #     for name, group in train_groups:
-    #         plot1.plot(group["X Value"], group["Y Value"], marker="o", c = color_dict[name],linestyle="", label=name)
-    #     for name, group in test_groups:
-    #         plot1.plot(group["X Value"], group["Y Value"], marker="x", c = color_dict[name],linestyle="", label=name)
-    # if len(train_set[0])-1 == 3:
-    #     plot2 = fig.add_subplot(1, 2, 1, projection='3d')
-    #     min_x = floor(min([row[0] for row in train_set]))
-    #     max_x = ceil(max([row[0] for row in train_set]))
-    #     x = np.array(range(min_x, max_x+1))
-    #     min_y = floor(min([row[1] for row in train_set]))
-    #     max_y = ceil(max([row[1] for row in train_set]))
-    #     y = np.array(range(min_y, max_y+1))
-    #     X, Y = np.meshgrid(x, y)
-    #     z = (-1*(weights[1]+ 1*e-20)*X + -1*(weights[2]+ 1*e-20)*Y +  (weights[0]+1*e-20)) / (weights[3]+1*e-20)
-    #     plot2.plot_surface(x, y, z)
-        
-    #     train_set.sort(key=itemgetter(-1), reverse=False)
-    #     test_set.sort(key=itemgetter(-1), reverse=False)
-    #     train_data = pd.DataFrame({"X Value": [row[0] for row in train_set], "Y Value": [row[1] for row in train_set], "Z Value": [row[2] for row in train_set],"Category": [row[3] for row in train_set]})
-    #     test_data = pd.DataFrame({"X Value": [row[0] for row in test_set], "Y Value": [row[1] for row in test_set], "Z Value": [row[2] for row in test_set], "Category": [row[3] for row in test_set]})
-    #     train_groups = train_data.groupby("Category")
-    #     test_groups = test_data.groupby("Category")
-        
-    #     group_idx_list = []
-    #     for group_idx, _ in train_groups:
-    #         if group_idx not in group_idx_list:
-    #             group_idx_list.append(group_idx)
-    #     color_dict = {}
-    #     color_dict[group_idx_list[0]] = "r"
-    #     color_dict[group_idx_list[1]] = "b"
-
-
-    #     for name, group in train_groups:
-    #         plot2.plot(group["X Value"], group["Y Value"],group["Z Value"], marker="o", c = color_dict[name],linestyle="", label=name)
-    #     for name, group in test_groups:
-    #         plot2.plot(group["X Value"], group["Y Value"], group["Z Value"], marker="x", c = color_dict[name],linestyle="", label=name)
-        
-
-
-
 
 
 ############gui##############
 window = tk.Tk()
 window.title('perceptron')
-window.geometry('600x600')
+window.geometry('1000x1000')
 
 # model parameter
 learning_rate = tk.DoubleVar()
 entry_learning_rate = tk.Entry(window, textvariable=learning_rate)
-entry_learning_rate.place(x=160, y=100)
-tk.Label(window, text='learning rate: ').place(x=50, y= 100)
+entry_learning_rate.place(x=160, y=50)
+tk.Label(window, text='learning rate: ').place(x=50, y= 50)
 iteration = tk.IntVar()
 entry_iteration = tk.Entry(window, textvariable=iteration)
-entry_iteration.place(x=160, y=140)
-tk.Label(window, text='iteration: ').place(x=50, y=140)
+entry_iteration.place(x=160, y=90)
+tk.Label(window, text='iteration: ').place(x=50, y=90)
 
 #select data
 dataset_url = ""
 filename = tk.StringVar()
-selected_file = tk.Label(window, textvariable=filename).place(x=280, y= 50)
-select_data_btn = tk.Button(window, text='select dataset', command=openfile).place(x=160, y=50)
+selected_file = tk.Label(window, textvariable=filename).place(x=280, y= 10)
+select_data_btn = tk.Button(window, text='select dataset', command=openfile).place(x=160, y=10)
 
 #start
 btn_start = tk.Button(window, text='start', command=start)
-btn_start.place(x=50, y=180)
+btn_start.place(x=50, y=130)
 
 #weights
-tk.Label(window, text='trained_weights: ').place(x=50, y= 230)
+tk.Label(window, text='trained_weights: ').place(x=50, y= 170)
 trained_weights = tk.StringVar()
-lb_trained_weights = tk.Label(window, textvariable=trained_weights).place(x=160, y=230)
+lb_trained_weights = tk.Label(window, textvariable=trained_weights).place(x=160, y=170)
 
 #score
-tk.Label(window, text='score: ').place(x=50, y= 270)
+tk.Label(window, text='train score: ').place(x=50, y= 210)
 trained_score = tk.StringVar()
-lb_trained_score = tk.Label(window, textvariable=trained_score).place(x=160, y=270)
+lb_trained_score = tk.Label(window, textvariable=trained_score).place(x=160, y=210)
 
-tk.Label(window, text='score: ').place(x=50, y= 310)
+tk.Label(window, text='test score: ').place(x=50, y= 250)
 test_score = tk.StringVar()
-lb_trained_score = tk.Label(window, textvariable=test_score).place(x=160, y=310)
+lb_trained_score = tk.Label(window, textvariable=test_score).place(x=160, y=250)
 
 #plot
 # the figure that will contain the plot
@@ -195,18 +158,13 @@ fig = Figure(figsize = (5, 5),
 canvas = FigureCanvasTkAgg(fig,
                             master = window) 
 
-
-
-# placing the canvas on the Tkinter window
-canvas.get_tk_widget().pack()
-
 # creating the Matplotlib toolbar
 toolbar = NavigationToolbar2Tk(canvas,
                                 window)
 toolbar.update()
 
 # placing the toolbar on the Tkinter window
-canvas.get_tk_widget().pack()
+canvas.get_tk_widget().place(x=160, y=290)
 
 window.mainloop()
 
